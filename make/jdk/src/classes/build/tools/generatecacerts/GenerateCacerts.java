@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,9 +31,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
-import java.security.cert.CertificateFactory;
+import java.security.PEMDecoder;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,10 +50,10 @@ public class GenerateCacerts {
 
     public static void store(String dir, OutputStream stream) throws Exception {
 
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-
         KeyStore ks = KeyStore.getInstance("pkcs12");
         ks.load(null, null);
+
+        PEMDecoder decoder = PEMDecoder.of();
 
         // All file names in dir sorted.
         // README is excluded. Name starting with "." excluded.
@@ -69,7 +68,7 @@ public class GenerateCacerts {
             String alias = entry + " [jdk]";
             X509Certificate cert;
             try (InputStream fis = Files.newInputStream(Path.of(dir, entry))) {
-                cert = (X509Certificate) cf.generateCertificate(fis);
+                cert = decoder.decode(fis, X509Certificate.class);;
             }
             ks.setCertificateEntry(alias, cert);
         }
